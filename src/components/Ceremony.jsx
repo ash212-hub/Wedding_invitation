@@ -7,7 +7,7 @@ import HaldiCard from "./HaldiCard";
 import MehndiCard from "./MehndiCard";
 import SangeetCard from "./SangeetCard";
 import BaaratCard from "./BaaratCard";
-import ThankYouCard from "./ThankYouCard";
+import ThankYouCard from "./Thankyoucard";
 
 /* ------------------------------------------------------------------ */
 /*  Ceremony                                                          */
