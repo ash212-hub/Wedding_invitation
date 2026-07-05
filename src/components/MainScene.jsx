@@ -36,13 +36,13 @@ function PageLogger() {
     const scroll = useScroll();
     const lastLogged = useRef(-1);
 
-    useFrame(() => {
-        const page = Math.round(scroll.offset * TOTAL_PAGES * 10) / 10; // 1 decimal place
-        if (page !== lastLogged.current) {
-            lastLogged.current = page;
-            console.log("page:", page);
-        }
-    });
+    // useFrame(() => {
+    //     const page = Math.round(scroll.offset * TOTAL_PAGES * 10) / 10; // 1 decimal place
+    //     if (page !== lastLogged.current) {
+    //         lastLogged.current = page;
+    //         console.log("page:", page);
+    //     }
+    // });
 
     return null;
 }
@@ -67,9 +67,11 @@ export default function MainScene() {
                     bride="Janaki"
                     date="12TH DECEMBER 2026"
                     location="HYDERABAD, INDIA"
-                    position={[0, 9, 2]}   // was [0, 3, 2] — Y changed from 3 to 9
+                    position={[0, 1, 0]}   // was [0, 3, 2] — Y changed from 3 to 9
                 />
             </ScrollControls>
+
+
 
             <Clouds />
         </Canvas>

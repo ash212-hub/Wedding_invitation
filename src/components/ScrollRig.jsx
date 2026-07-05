@@ -4,6 +4,7 @@ import { useScroll } from "@react-three/drei";
 import * as THREE from "three";
 import { Aeroplane } from "./Aeroplane";
 import { VerticalPillar } from "./VerticalPillar";
+import Ceremony from "./Ceremony ";
 
 /* ------------------------------------------------------------------ */
 /*  STEP 1 — plane pass + fog-reveal tilt                               */
@@ -48,6 +49,7 @@ const CAMERA_TILT_END_PAGE = 7;
 const CAMERA_LOOK_DISTANCE = 9;
 const CAMERA_TILT_DAMPING = 2; // slow, deliberate — not snappy
 // thin — pillar fully visible
+const CAMERA_HANDOFF_PAGE = 7.5; // must match STAGE_START in Ceremony.jsx — ScrollRig stops driving camera here
 
 // ===== Plane model / motion tuning =====
 const MODEL_FORWARD_OFFSET_DEG = 0;
@@ -112,7 +114,6 @@ export function ScrollRig() {
         const rawPage = scroll.offset * TOTAL_PAGES;
         smoothedPage.current = THREE.MathUtils.damp(smoothedPage.current, rawPage, PAGE_DAMPING, delta);
         const page = smoothedPage.current;
-
         // ===== PLANE =====
         if (planeRef.current) {
             const t = pageToCurveT(page, FLIGHT_KEYFRAMES);
@@ -149,40 +150,40 @@ export function ScrollRig() {
             }
         }
 
-        // ===== CAMERA — fixed position, set once =====
-        if (!cameraPlaced.current) {
+        // ===== CAMERA — only while ScrollRig owns it (Ceremony takes over at CAMERA_HANDOFF_PAGE) =====
+        if (page < CAMERA_HANDOFF_PAGE) {
+            // ===== CAMERA — always enforce fixed position while ScrollRig owns it =====
+            // Must re-assert every frame (NOT just once) — otherwise scrolling
+            // BACKWARD from Ceremony's orbit leaves the camera wherever Ceremony
+            // last placed it, instead of resetting here. That was the bug.
             state.camera.position.set(...CAMERA_FIXED_POSITION);
-            cameraPlaced.current = true;
+
+            // ===== CAMERA — gaze angle tilts from 120° -> 60° (in place, rotation only) =====
+            const tiltT = ease(
+                THREE.MathUtils.clamp(
+                    (page - CAMERA_TILT_START_PAGE) / (CAMERA_TILT_END_PAGE - CAMERA_TILT_START_PAGE),
+                    0,
+                    1
+                )
+            );
+            const targetAngleDeg = THREE.MathUtils.lerp(CAMERA_ANGLE_START, CAMERA_ANGLE_END, tiltT);
+            smoothedAngleDeg.current = THREE.MathUtils.damp(
+                smoothedAngleDeg.current,
+                targetAngleDeg,
+                CAMERA_TILT_DAMPING,
+                delta
+            );
+
+            // Convert the 90°-is-level angle into an actual elevation in radians.
+            const elevationRad = THREE.MathUtils.degToRad(smoothedAngleDeg.current - 90);
+            const gazeDir = new THREE.Vector3(0, Math.sin(elevationRad), -Math.cos(elevationRad));
+            const lookTarget = new THREE.Vector3(
+                state.camera.position.x + gazeDir.x * CAMERA_LOOK_DISTANCE,
+                state.camera.position.y + gazeDir.y * CAMERA_LOOK_DISTANCE,
+                state.camera.position.z + gazeDir.z * CAMERA_LOOK_DISTANCE
+            );
+            state.camera.lookAt(lookTarget);
         }
-
-        // ===== CAMERA — gaze angle tilts from 120° -> 60° (in place, rotation only) =====
-        const tiltT = ease(
-            THREE.MathUtils.clamp(
-                (page - CAMERA_TILT_START_PAGE) / (CAMERA_TILT_END_PAGE - CAMERA_TILT_START_PAGE),
-                0,
-                1
-            )
-        );
-        const targetAngleDeg = THREE.MathUtils.lerp(CAMERA_ANGLE_START, CAMERA_ANGLE_END, tiltT);
-        smoothedAngleDeg.current = THREE.MathUtils.damp(
-            smoothedAngleDeg.current,
-            targetAngleDeg,
-            CAMERA_TILT_DAMPING,
-            delta
-        );
-
-        // Convert the 90°-is-level angle into an actual elevation in radians.
-        const elevationRad = THREE.MathUtils.degToRad(smoothedAngleDeg.current - 90);
-        const gazeDir = new THREE.Vector3(0, Math.sin(elevationRad), -Math.cos(elevationRad));
-        const lookTarget = new THREE.Vector3(
-            state.camera.position.x + gazeDir.x * CAMERA_LOOK_DISTANCE,
-            state.camera.position.y + gazeDir.y * CAMERA_LOOK_DISTANCE,
-            state.camera.position.z + gazeDir.z * CAMERA_LOOK_DISTANCE
-        );
-        state.camera.lookAt(lookTarget);
-
-
-
     });
 
     return (
@@ -195,6 +196,7 @@ export function ScrollRig() {
 
 
             <VerticalPillar />
+            <Ceremony />
         </>
     );
 }
