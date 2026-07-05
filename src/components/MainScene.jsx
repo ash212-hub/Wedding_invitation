@@ -55,7 +55,7 @@ export default function MainScene() {
             <Sky />
 
             {/* pages must match TOTAL_PAGES in ScrollRig.jsx */}
-            <ScrollControls pages={20} damping={0.2}>
+            <ScrollControls pages={20} damping={0.2} >
                 <ScrollRig />
                 <PageLogger />
 
