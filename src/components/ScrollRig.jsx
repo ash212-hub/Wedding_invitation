@@ -4,7 +4,7 @@ import { useScroll } from "@react-three/drei";
 import * as THREE from "three";
 import { Aeroplane } from "./Aeroplane";
 import { VerticalPillar } from "./VerticalPillar";
-import Ceremony from "./Ceremony ";
+import Ceremony from "./Ceremony";
 
 /* ------------------------------------------------------------------ */
 /*  STEP 1 — plane pass + fog-reveal tilt                               */
